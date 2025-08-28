@@ -1,0 +1,109 @@
+/* ---------- Theme ---------- */
+:root{
+  --bg:#0f1115;
+  --panel:#171923;
+  --panel-2:#1e2230;
+  --text:#e5e7eb;
+  --muted:#a0aec0;
+  --primary:#6d6cff;
+  --primary-2:#4f46e5;
+  --border:#2b3145;
+  --radius:16px;
+  --shadow:0 8px 30px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font:500 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+}
+
+/* ---------- App shell ---------- */
+.app{padding:32px; max-width:1400px; margin:0 auto}
+.app__title{font-size:28px; font-weight:800; margin:0 0 16px}
+
+/* ---------- Toolbar / controls ---------- */
+.toolbar{display:flex; flex-wrap:wrap; gap:20px; align-items:flex-end; margin:0 0 20px}
+.toolbar__group{display:flex; flex-direction:column; gap:8px; min-width:220px}
+.label{font-weight:600; color:var(--muted)}
+.input, .select{
+  appearance:none;
+  width:100%;
+  height:38px;
+  padding:0 10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  outline:none;
+  background:var(--panel);
+  color:var(--text);
+}
+.input:focus, .select:focus{border-color:var(--primary)}
+
+.btn{
+  height:38px; padding:0 14px; border:0; border-radius:10px;
+  background:linear-gradient(180deg,var(--primary),var(--primary-2));
+  color:white; font-weight:700; cursor:pointer;
+  box-shadow:var(--shadow);
+}
+.btn:hover{filter:brightness(1.05)}
+.btn:active{transform:translateY(1px)}
+
+/* ---------- Cards / panels ---------- */
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+.panel__title{font-weight:700; margin:0 0 10px}
+
+.gallery{
+  display:grid; gap:16px;
+}
+
+.image-card{
+  background:var(--panel-2);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.image-card:hover{transform:translateY(-2px)}
+.image-card__img{width:100%; height:auto; display:block; background:#0b0d12}
+.image-card__caption{
+  padding:10px 12px;
+  border-top:1px solid var(--border);
+  color:#d2d6e3;
+  font-size:13px;
+  display:flex; flex-direction:column; gap:2px;
+}
+
+/* ---------- CaptionParamPicker ---------- */
+.picker{position:relative; width:320px}
+.picker__button{
+  width:100%; height:38px; border-radius:10px; border:1px solid var(--border);
+  background:var(--panel); color:var(--text); text-align:left; padding:0 10px; cursor:pointer;
+}
+.picker__button:hover{border-color:var(--primary)}
+.picker__menu{
+  position:absolute; inset:auto 0 0 0; transform:translateY(calc(100% + 8px));
+  background:var(--panel); border:1px solid var(--border); border-radius:12px;
+  max-height:260px; overflow:auto; padding:8px; box-shadow:var(--shadow); z-index:50;
+}
+.picker__option{display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; cursor:pointer}
+.picker__option:hover{background:rgba(255,255,255,.05)}
+.picker__option input{accent-color:var(--primary)}
+
+/* ---------- Plotly containers ---------- */
+.plot{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:8px; box-shadow:var(--shadow)}
+/* Make Plotly backgrounds transparent so the panel shows through */
+.js-plotly-plot .plotly .bg{fill:transparent !important}
+.js-plotly-plot .plotly text{fill:var(--text)}
+
+/* ---------- Modal (if you want) ---------- */
+.modal__overlay{position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:100}
+.modal__content{background:var(--panel); border:1px solid var(--border); border-radius:18px; width:min(820px,92vw); max-height:90vh; overflow:auto; padding:20px; color:var(--text); box-shadow:var(--shadow)}
