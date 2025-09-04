@@ -14,8 +14,9 @@ export default function VisualizationPanel({ filteredData, onSelectItem, selecte
   // Parallel coordinates
   const [pcParams, setPcParams] = useState([]);
   const [pcDiv, setPcDiv] = useState(null);
-
+  const [pcColorParam, setPcColorParam] = useState(""); 
   const [numericParams, setNumericParams] = useState([]);
+  
 
   const AXIS = '#6b7280';            // labels/ticks
   const GRID_SOLID = '#64748b';      // slate-500 solid (no alpha)
@@ -66,7 +67,9 @@ const axis3D = {
         (k) => typeof filteredData[0].params[k] === "number"
       );
       setNumericParams(keys);
-
+      if (!pcColorParam && keys.length > 0) {
+        setPcColorParam(keys[0]);   
+      }
       if (!x2d) setX2d(keys[0]);
       if (!y2d) setY2d(keys[1] || keys[0]);
       if (!x3d) setX3d(keys[0]);
@@ -97,6 +100,7 @@ const axis3D = {
   const x3dVals = filteredData.map((d) => d.params[x3d]);
   const y3dVals = filteredData.map((d) => d.params[y3d]);
   const z3dVals = filteredData.map((d) => d.params[z3d]);
+  
 
   const pcDimensions = pcParams.map((param) => {
     const vals = filteredData.map((d) => d.params[param]);
@@ -275,13 +279,26 @@ const axis3D = {
         </div>
 
         <div className="rounded-xl border border-slate-800 bg-slate-900 p-2 shadow">
+        <div className="flex flex-col gap-2 mb-2">
+  <label className="text-slate-400 font-semibold">Color by parameter</label>
+  <select
+    className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100"
+    value={pcColorParam}
+    onChange={(e) => setPcColorParam(e.target.value)}
+  >
+    {numericParams.map((p) => (
+      <option key={p} value={p}>{p}</option>
+    ))}
+  </select>
+</div>
           <Plot
             data={[{
               type: "parcoords",
               line: {
-                color: pcParams.length
-                  ? filteredData.map((d) => d.params[pcParams[0]])
+                color: pcColorParam
+                  ? filteredData.map((d) => d.params[pcColorParam])
                   : filteredData.map((_, i) => i),
+                colorscale: "Viridis",   // or any Plotly scale
                 showscale: true,
               },
               dimensions: pcDimensions,
