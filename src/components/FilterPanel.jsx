@@ -53,31 +53,31 @@ export default function FilterPanel({ data, onFilter, onReset, onSort }) {
       {conditions.map((cond, i) => (
         <div key={i} className="flex items-center space-x-2 mb-2">
           <select
-            className="border p-2 rounded"
-            value={cond.parameter}
-            onChange={(e) => handleChange(i, 'parameter', e.target.value)}
-          >
-            <option value="">parameter name...</option>
-            {parameters.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-          <select
-            className="border p-2 rounded"
-            value={cond.operator}
-            onChange={(e) => handleChange(i, 'operator', e.target.value)}
-          >
-            {operators.map((op) => (
-              <option key={op} value={op}>{op}</option>
-            ))}
-          </select>
-          <input
-            type="number"
-            placeholder="parameter value..."
-            className="border p-2 rounded"
-            value={cond.value}
-            onChange={(e) => handleChange(i, 'value', e.target.value)}
-          />
+  className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/50"
+  value={cond.parameter}
+  onChange={(e) => handleChange(i, 'parameter', e.target.value)}
+>
+  <option className="bg-slate-900 text-slate-100" value="">parameter name...</option>
+  {parameters.map((p) => (
+    <option className="bg-slate-900 text-slate-100" key={p} value={p}>{p}</option>
+  ))}
+</select>
+<select
+  className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/50"
+  value={cond.operator}
+  onChange={(e) => handleChange(i, 'operator', e.target.value)}
+>
+  {operators.map((op) => (
+    <option key={op} value={op}>{op}</option>
+  ))}
+</select>
+<input
+  type="number"
+  placeholder="parameter value..."
+  className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/50"
+  value={cond.value}
+  onChange={(e) => handleChange(i, 'value', e.target.value)}
+/>
         </div>
       ))}
       <div className="space-x-2 mb-4">
@@ -103,7 +103,7 @@ export default function FilterPanel({ data, onFilter, onReset, onSort }) {
       <div className="mb-4">
         <label className="mr-2 font-medium">Sort by:</label>
         <select
-          className="border p-2 rounded mr-2"
+          className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/50"
           value={sortParam}
           onChange={(e) => setSortParam(e.target.value)}
         >

@@ -1,7 +1,12 @@
 import React from "react";
 
 export default function ImageCard({ item, view, onClick, captionParams = [] }) {
-  const imageSrc = item.views?.[view];
+    const imageSrc =
+    item?.images?.[view] ??
+    item?.views?.[view] ??
+    item?.images?.front ??
+    item?.views?.front ??
+    "";
 
   return (
     <div
@@ -18,9 +23,14 @@ export default function ImageCard({ item, view, onClick, captionParams = [] }) {
       className="group overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow transition hover:shadow-xl hover:-translate-y-0.5"
     >
       <img
+        key={`${item._key || item.id}-${view}`}          
         src={imageSrc}
         alt={`${view} view of item ${item.id}`}
         className="w-full h-auto object-cover bg-slate-950"
+        onError={(e) => {
+          const fb = item?.images?.front ?? item?.views?.front ?? "";
+          if (fb && e.currentTarget.src !== fb) e.currentTarget.src = fb;
+        }}
         loading="lazy"
       />
       {captionParams.length > 0 && (

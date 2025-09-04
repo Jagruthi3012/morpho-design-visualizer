@@ -17,19 +17,47 @@ export default function VisualizationPanel({ filteredData, onSelectItem, selecte
 
   const [numericParams, setNumericParams] = useState([]);
 
+  const AXIS = '#6b7280';            // labels/ticks
+  const GRID_SOLID = '#64748b';      // slate-500 solid (no alpha)
+  const GRID_BOLD  = '#475569';
+
   const basePlotLayout = {
-    paper_bgcolor: 'rgba(0,0,0,0)',
+    paper_bgcolor: 'rgba(0,0,0,0)',   
     plot_bgcolor: 'rgba(0,0,0,0)',
     margin: { l: 50, r: 20, t: 40, b: 50 },
-    font: { color: '#e2e8f0' }, // slate-200
+    font: { color: AXIS },            
+  };
+
+  const downloadConfig = {
+    displaylogo: false,
+    toImageButtonOptions: { format: 'png', scale: 2, filename: 'morpho-plot' },
   };
   
-  const axis2d = {
-    gridcolor: 'rgba(148,163,184,0.25)',     // slate-400 at low alpha
-    zerolinecolor: 'rgba(148,163,184,0.35)',
-    linecolor: 'rgba(148,163,184,0.4)',
-    ticks: 'outside',
-    tickcolor: 'rgba(148,163,184,0.4)',
+ // subtle grid (slate-400 @ 25%)
+
+const axis2D = {
+  showline: true,
+  linewidth: 1,
+  linecolor: AXIS,
+  tickcolor: AXIS,
+  tickfont: { color: AXIS },
+  title: { font: { color: AXIS } },
+  gridcolor: GRID_SOLID,
+  zerolinecolor: AXIS,
+};
+
+const axis3D = {
+    color: AXIS,
+    tickfont: { color: AXIS },
+    title: { font: { color: AXIS } },
+    showgrid: true,
+    gridcolor: GRID_SOLID,
+    gridwidth: 2,
+    zeroline: true,
+    zerolinecolor: GRID_BOLD,
+    zerolinewidth: 2,
+    showbackground: true,
+    backgroundcolor: 'rgba(0,0,0,0)',
   };
 
   useEffect(() => {
@@ -153,20 +181,20 @@ export default function VisualizationPanel({ filteredData, onSelectItem, selecte
       },
     ]}
     layout={{
-      ...basePlotLayout,
-      title: `${x2d} vs ${y2d}`,
-      xaxis: { title: x2d, ...axis2d },
-      yaxis: { title: y2d, ...axis2d },
-      hovermode: 'closest',
-      hoverlabel: {                 // make the tooltip pop
-        bgcolor: '#f472b6',
-        bordercolor: '#f472b6',
-        font: { color: '#0b1220', size: 14 },
-      },
-      autosize: true,
-    }}
+        ...basePlotLayout,
+        title: { text: `${x2d} vs ${y2d}`, font: { color: AXIS } },
+        xaxis: { ...axis2D, title: { text: x2d, font: { color: AXIS } } },
+        yaxis: { ...axis2D, title: { text: y2d, font: { color: AXIS } } },
+        hovermode: 'closest',
+        hoverlabel: {
+          bgcolor: '#f472b6',
+          bordercolor: '#f472b6',
+          font: { color: '#0b1220', size: 14 },
+        },
+        autosize: true,
+      }}
+    config={downloadConfig}
     onClick={handlePointClick}
-    config={{ displaylogo: false }}
   />
 </div>
 
@@ -212,32 +240,17 @@ export default function VisualizationPanel({ filteredData, onSelectItem, selecte
   ]}
   layout={{
     ...basePlotLayout,
-    title: `${x3d} vs ${y3d} vs ${z3d}`,
+    title: { text: `${x3d} vs ${y3d} vs ${z3d}`, font: { color: AXIS } },
     scene: {
       bgcolor: 'rgba(0,0,0,0)',
-      xaxis: {
-        title: x3d,
-        gridcolor: 'rgba(148,163,184,0.25)',
-        zerolinecolor: 'rgba(148,163,184,0.35)',
-        color: '#e2e8f0',
-      },
-      yaxis: {
-        title: y3d,
-        gridcolor: 'rgba(148,163,184,0.25)',
-        zerolinecolor: 'rgba(148,163,184,0.35)',
-        color: '#e2e8f0',
-      },
-      zaxis: {
-        title: z3d,
-        gridcolor: 'rgba(148,163,184,0.25)',
-        zerolinecolor: 'rgba(148,163,184,0.35)',
-        color: '#e2e8f0',
-      },
+      xaxis: { ...axis3D, title: { text: x3d, font: { color: AXIS } } },
+      yaxis: { ...axis3D, title: { text: y3d, font: { color: AXIS } } },
+      zaxis: { ...axis3D, title: { text: z3d, font: { color: AXIS } } },
     },
     autosize: true,
   }}
+  config={downloadConfig}
   onClick={handlePointClick}
-  config={{ displaylogo: false }}
 />
       </div>
 

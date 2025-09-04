@@ -1,4 +1,5 @@
 import FilterPanel from "./components/FilterPanel";
+import DatasetUploader from "./components/DatasetUploader";
 import useData from "./hooks/useData";
 import ImageCard from "./components/ImageCard";
 import DetailsModal from "./components/DetailsModal";
@@ -22,6 +23,25 @@ function NoResultsToast({ onClose }) {
         >
           ×
         </button>
+      </div>
+    </div>
+  );
+}
+
+function Toast({ children, onClose }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 3000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+  return (
+    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
+      <div className="pointer-events-auto flex items-center gap-2 rounded-xl
+                      border border-emerald-500/30 bg-emerald-500/15
+                      px-3 py-2 text-emerald-100 shadow-xl backdrop-blur">
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 22s8-4 8-10A8 8 0 1 0 4 12c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
+        </svg>
+        <span className="text-sm">{children}</span>
       </div>
     </div>
   );
@@ -73,7 +93,9 @@ function SidePanel({ open, onClose, title = "Visualizations", children }) {
 }
 
 function App() {
-  const { data, loading } = useData();
+  const { data: defaultData, loading } = useData();
+  const [uploadedData, setUploadedData] = useState([]);
+  const data = uploadedData.length ? uploadedData : defaultData;
   const [isFiltered, setIsFiltered] = useState(false);
   const [noResults, setNoResults] = useState(false);
   const [selectedView, setSelectedView] = useState("front");
@@ -82,6 +104,8 @@ function App() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [columnsPerRow, setColumnsPerRow] = useState(4);
   const [captionParams, setCaptionParams] = useState([]);
+  const [openUploader, setOpenUploader] = useState(false);
+  const [showDatasetToast, setShowDatasetToast] = useState(false);
 
   const numericParameters = Object.keys(data[0]?.params || {}).filter(
     (k) => typeof data[0]?.params[k] === "number"
@@ -118,15 +142,17 @@ function App() {
 
   const applySort = (param) => {
     if (!param) return;
-    const sorted = [...(filteredData.length ? filteredData : data)].sort(
-      (a, b) => a.params[param] - b.params[param]
-    );
+    const base = isFiltered && filteredData.length ? filteredData : data;
+    const sorted = [...base].sort((a, b) => a.params[param] - b.params[param]);
     setFilteredData(sorted);
+    setIsFiltered(true);            // <- make UI render the sorted list
   };
 
   const displayed = isFiltered ? filteredData : data;
+  const totalCount = data.length;
+  const shownCount = displayed.length;
 
-  if (loading) {
+  if (loading && uploadedData.length === 0) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100">
         <div className="max-w-7xl mx-auto p-6">
@@ -152,6 +178,18 @@ function App() {
     <div className="h-dvh w-full overflow-hidden"> {/* fixed viewport shell, never resizes */}
     <div className="h-full w-full overflow-y-scroll [scrollbar-gutter:stable] overflow-x-hidden">
     {noResults && <NoResultsToast onClose={() => setNoResults(false)} />}
+      {/* Result count fixed top-right */}
+<div className="fixed top-4 right-6 z-50">
+  <span className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-sm font-medium text-slate-200 shadow-lg backdrop-blur">
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M10 8h4M8 12h8M9 16h6" />
+    </svg>
+    {isFiltered
+      ? `${shownCount} / ${totalCount} results`
+      : `${totalCount} results`}
+  </span>
+</div>
     <div className="mx-auto w-full max-w-none px-4 sm:px-6 lg:px-8 py-6">
   <div className="flex items-center gap-3 mb-6">
     <img
@@ -162,8 +200,23 @@ function App() {
     <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-none bg-gradient-to-r from-indigo-400 to-emerald-400 bg-clip-text text-transparent">
       Morpho Design Explorer
     </h1>
+    <div className="ml-auto">
+      <button
+        onClick={() => setOpenUploader(true)}
+        className="h-10 px-4 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow"
+        title="Upload CSV + image folders"
+      >
+        Upload Dataset
+      </button>
+    </div>
   </div>
 </div>
+
+{showDatasetToast && (
+  <Toast onClose={() => setShowDatasetToast(false)}>
+    Using uploaded dataset ({uploadedData.length} items)
+  </Toast>
+)}
 
         {/* Filters */}
         <div className="mb-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6 shadow-lg">
@@ -231,20 +284,21 @@ function App() {
           </div>
         </div>
 
+
         {/* Gallery */}
         <div
   className="mt-6 grid w-full gap-4"
   style={{ gridTemplateColumns: `repeat(${Math.max(1, columnsPerRow)}, minmax(0, 1fr))` }}
 >
-  {displayed.map((item) => (
-    <ImageCard
-      key={item.id}
-      item={item}
-      view={selectedView}
-      onClick={() => setSelectedItem(item)}
-      captionParams={captionParams}
-    />
-  ))}
+{displayed.map((item) => (
+  <ImageCard
+    key={item._key || item.id}         // <-- use unique key
+    item={item}
+    view={selectedView}
+    onClick={() => setSelectedItem(item)}
+    captionParams={captionParams}
+  />
+))}
 </div>
 
         {/* Visualizations */}
@@ -256,9 +310,40 @@ function App() {
   />
 </SidePanel>
 
+{/* Uploader panel*/}
+<SidePanel open={openUploader} onClose={() => setOpenUploader(false)} title="Upload Dataset">
+ <div className="space-y-4">
+    <p className="text-slate-300 text-sm">
+      Pick one CSV and the four image folders (Front, Top, Isometric, Truss deformation).
+    </p>
+    <DatasetUploader
+     showIdField={false}              // hide the ID column input
+      onReady={(items) => {
+       setUploadedData(items);        // switch app to the uploaded dataset
+       setFilteredData([]);           // clear filters/sort
+       setIsFiltered(false);
+       setNoResults(false);
+        setSelectedItem(null);
+        setSelectedView("front");
+        setOpenUploader(false); 
+        setShowDatasetToast(true);       // close the panel
+      }}
+    />
+    {uploadedData.length > 0 && (
+     <div className="pt-2 text-xs text-slate-400">
+        Currently using uploaded dataset ({uploadedData.length} items).
+      </div>
+   )}
+  </div>
++</SidePanel>
+
         {/* Modal */}
         {selectedItem && (
-          <DetailsModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+          <DetailsModal
+          item={selectedItem}
+          view={selectedView}        // <— tell the modal which view is active
+          onClose={() => setSelectedItem(null)}
+        />
         )}
       </div>
     </div>
