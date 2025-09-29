@@ -66,12 +66,12 @@ function SidePanel({ open, onClose, title = "Visualizations", children }) {
       />
       {/* panel */}
       <aside
-        className={[
-          "absolute right-0 top-0 h-dvh w-full sm:w-[560px] lg:w-[880px]",
-          "bg-slate-900 border-l border-slate-800 shadow-2xl",
-          "transform transition-transform duration-300",
-          open ? "translate-x-0" : "translate-x-full",
-        ].join(" ")}
+  className={[
+    "absolute right-0 top-0 h-dvh w-full lg:w-[min(95vw,1400px)]",  // allow much wider
+    "bg-slate-900 border-l border-slate-800 shadow-2xl",
+    "transform transition-transform duration-300",
+    open ? "translate-x-0" : "translate-x-full",
+  ].join(" ")}
         aria-modal="true"
         role="dialog"
       >
@@ -106,6 +106,7 @@ function App() {
   const [captionParams, setCaptionParams] = useState([]);
   const [openUploader, setOpenUploader] = useState(false);
   const [showDatasetToast, setShowDatasetToast] = useState(false);
+  const [folderLabels, setFolderLabels] = useState(null);
 
   const numericParameters = Object.keys(data[0]?.params || {}).filter(
     (k) => typeof data[0]?.params[k] === "number"
@@ -232,19 +233,29 @@ function App() {
 
         {/* Toolbar */}
         <div className="flex flex-wrap items-end gap-4 md:gap-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6 shadow-lg">
-          <div className="flex flex-col gap-2 min-w-[220px]">
-            <label className="text-slate-400 font-semibold">Select Image View</label>
-            <select
-              className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/50"
-              value={selectedView}
-              onChange={(e) => setSelectedView(e.target.value)}
-            >
-              <option value="front">Front View</option>
-              <option value="top">Top View</option>
-              <option value="iso">Isometric View</option>
-              <option value="deformation">Truss Deformation</option>
-            </select>
-          </div>
+        <div className="flex flex-col gap-2 min-w-[220px]">
+  <label className="text-slate-400 font-semibold">Select Image View</label>
+  <select
+  className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/50"
+  value={selectedView}
+  onChange={(e) => setSelectedView(e.target.value)}
+>
+  {uploadedData.length === 0 ? (
+    <>
+      <option value="front">Front View</option>
+      <option value="top">Top View</option>
+      <option value="iso">Isometric View</option>
+      <option value="deformation">Truss Deformation</option>
+    </>
+  ) : (
+    Object.keys(data[0]?.images || {}).map((key, i) => (
+      <option key={key} value={key}>
+        {folderLabels?.[i] || `Folder ${i + 1}`}   
+      </option>
+    ))
+  )}
+</select>
+</div>
 
           <div className="flex flex-col gap-2 w-full sm:w-36">
             <label className="text-slate-400 font-semibold">Images per row</label>
@@ -263,13 +274,13 @@ function App() {
 
           <div className="flex flex-col gap-2 w-full sm:min-w-[260px] sm:w-[320px]">
             <label className="text-slate-400 font-semibold">
-              Caption parameters (max 2)
+              Caption parameters
             </label>
             <CaptionParamPicker
               options={numericParameters}
               value={captionParams}
               onChange={setCaptionParams}
-              max={2}
+              max={numericParameters.length}
               placeholder="Pick parameters…"
             />
           </div>
@@ -314,12 +325,13 @@ function App() {
 <SidePanel open={openUploader} onClose={() => setOpenUploader(false)} title="Upload Dataset">
  <div className="space-y-4">
     <p className="text-slate-300 text-sm">
-      Pick one CSV and the four image folders (Front, Top, Isometric, Truss deformation).
+      Pick one CSV and the four image folders (Ex: Front, Top, Isometric, Truss deformation).
     </p>
     <DatasetUploader
      showIdField={false}              // hide the ID column input
-      onReady={(items) => {
-       setUploadedData(items);        // switch app to the uploaded dataset
+      onReady={(items, { folderLabels }) => {
+       setUploadedData(items); 
+       setFolderLabels(folderLabels);       // switch app to the uploaded dataset
        setFilteredData([]);           // clear filters/sort
        setIsFiltered(false);
        setNoResults(false);
@@ -343,6 +355,7 @@ function App() {
           item={selectedItem}
           view={selectedView}        // <— tell the modal which view is active
           onClose={() => setSelectedItem(null)}
+          folderLabels={folderLabels}
         />
         )}
       </div>

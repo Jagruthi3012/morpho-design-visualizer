@@ -1,4 +1,3 @@
-// src/components/DatasetUploader.jsx
 import { useState, useMemo } from "react";
 import Papa from "papaparse";
 
@@ -8,49 +7,52 @@ const field =
   "focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 " +
   "disabled:opacity-60 disabled:cursor-not-allowed";
 
-const views = [
-  { key: "front",       label: "Front view" },
-  { key: "top",         label: "Top view" },
-  { key: "iso",         label: "Isometric view" },
-  { key: "deformation", label: "Truss deformation" },
-];
-
-function lastIntIn(str) {
-  const m = String(str || "").match(/(\d+)(?!.*\d)/);
-  return m ? Number(m[1]) : null;
-}
 function toNumber(v) {
   if (v === "" || v == null) return undefined;
   const n = Number(v);
   return Number.isFinite(n) ? n : v;
 }
 function indexById(files) {
-  // { id -> blobUrl }
   const map = new Map();
   for (const f of files || []) {
-    const id = lastIntIn(f.name);
-    if (id != null) map.set(id, URL.createObjectURL(f));
+    // keep map available, but we won’t rely on IDs for ordering anymore
+    const m = String(f.name || "").match(/(\d+)(?!.*\d)/);
+    if (m) map.set(Number(m[1]), URL.createObjectURL(f));
   }
   return map;
 }
 
-export default function DatasetUploader({ onReady, showIdField = false }) {  const [csv, setCsv] = useState(null);
-  const [folders, setFolders] = useState({
-    front: [], top: [], iso: [], deformation: []
-  });
-  const [idColumn, setIdColumn] = useState("");     // user can override
+export default function DatasetUploader({ onReady, showIdField = false }) {
+  const [csv, setCsv] = useState(null);
+  const [folders, setFolders] = useState([{ key: "folder1", files: [] }]); // start with one folder
+  const [idColumn, setIdColumn] = useState("");
   const [parsing, setParsing] = useState(false);
   const [err, setErr] = useState("");
 
-  const counts = useMemo(() => ({
-    front: folders.front.length,
-    top: folders.top.length,
-    iso: folders.iso.length,
-    deformation: folders.deformation.length,
-  }), [folders]);
+  const counts = useMemo(() => {
+    const out = {};
+    folders.forEach((f) => {
+      out[f.key] = f.files.length;
+    });
+    return out;
+  }, [folders]);
 
   const handleFolder = (key) => (e) => {
-    setFolders((s) => ({ ...s, [key]: Array.from(e.target.files || []) }));
+    const files = Array.from(e.target.files || []);
+    let label = key; // fallback
+    if (files.length > 0) {
+      // extract the immediate folder name from first file’s relative path
+      const parts = files[0].webkitRelativePath.split("/");
+      if (parts.length > 1) {
+        label = parts[parts.length - 2];   // parent folder
+      }
+    }
+  
+    setFolders((prev) =>
+      prev.map((f) =>
+        f.key === key ? { ...f, files, label } : f
+      )
+    );
   };
 
   function sortByName(files) {
@@ -58,117 +60,91 @@ export default function DatasetUploader({ onReady, showIdField = false }) {  con
       a.name.localeCompare(b.name, undefined, { numeric: true })
     );
   }
-  
   function fileAt(files, i) {
-      if (!files || i == null || i < 0 || i >= files.length) return "";
-      const f = files[i];
+    if (!files || i == null || i < 0 || i >= files.length) return "";
+    const f = files[i];
     return f ? URL.createObjectURL(f) : "";
   }
-  
-  function buildItems(csvRows, chosenIdCol) {
-    // 1) Index-based arrays (sorted by filename)
-    const seq = {
-      front: sortByName(folders.front),
-      top: sortByName(folders.top),
-      iso: sortByName(folders.iso),
-      deformation: sortByName(folders.deformation),
-    };
-  
-    // 2) ID-based maps (optional / fallback)
-    const byId = {
-      front: indexById(folders.front),
-      top: indexById(folders.top),
-      iso: indexById(folders.iso),
-      deformation: indexById(folders.deformation),
-    };
-  
+
+  function buildItems(csvRows) {
+    const seq = {};
+    const byId = {};
+
+    folders.forEach((f) => {
+      seq[f.key] = sortByName(f.files);
+      byId[f.key] = indexById(f.files);
+    });
+
     const items = [];
-  
     csvRows.forEach((row, rowIndex) => {
-      // prefer explicit or detect first column; fallback to rowIndex+1
-      let id = rowIndex + 1;
- if (chosenIdCol) {
-   const idRaw = row[chosenIdCol];
-   const parsedId = lastIntIn(idRaw);
-   if (parsedId != null) id = parsedId;
- }
-  
-      // Build params (numbers become numbers)
+      // ✅ Always sequential IDs based on CSV row order
+      const id = rowIndex + 1;
+
       const params = {};
       for (const [k, v] of Object.entries(row)) {
-        if (chosenIdCol && k === chosenIdCol) continue;
         const n = toNumber(v);
         if (n !== undefined) params[k] = n;
       }
-  
-      // --- Primary: index-based mapping (nth image -> (n+1)th row) ---
-      const idx = rowIndex - 1;
-  const frontSeq = fileAt(seq.front, idx);
-  const topSeq   = fileAt(seq.top, idx);
-  const isoSeq   = fileAt(seq.iso, idx);
-  const defSeq   = fileAt(seq.deformation, idx);
-  
-      // --- Fallback: ID-based lookup (if present and matched) ---
-      const frontById = byId.front.get(id) || "";
-      const topById = byId.top.get(id) || "";
-      const isoById = byId.iso.get(id) || "";
-      const defById = byId.deformation.get(id) || "";
-  
+
+      const images = {};
+      folders.forEach((f) => {
+        const seqImg = fileAt(seq[f.key], rowIndex); // rowIndex matches CSV order
+        const byIdImg = byId[f.key].get(id) || "";
+        images[f.key] = seqImg || byIdImg;
+      });
+
       items.push({
-        id,                 
-        _row: rowIndex,     
-        _key: `${rowIndex}-${id}`,   
+        id,
+        _row: rowIndex,
+        _key: `${rowIndex}-${id}`,
         params,
-        images: { front: frontSeq || frontById, top: topSeq || topById, iso: isoSeq || isoById, deformation: defSeq || defById }
+        images,
       });
     });
-  
+
     return items;
   }
-  
 
   function parseCsv() {
     if (!csv) return setErr("Please choose a CSV file.");
     setErr("");
     setParsing(true);
-
+  
     Papa.parse(csv, {
       header: true,
       skipEmptyLines: true,
       complete: (res) => {
         const rawRows = (res.data || []).filter((r) => Object.keys(r).length);
-
-  const rows = rawRows.map((r) => {
-    const out = {};
-   for (const [k, v] of Object.entries(r)) {
-      out[String(k).trim()] = v;
-    }
-    return out;
-  });
+        const rows = rawRows.map((r) => {
+          const out = {};
+          for (const [k, v] of Object.entries(r)) {
+            out[String(k).trim()] = v;
+          }
+          return out;
+        });
         if (!rows.length) {
           setErr("CSV seems empty or unreadable.");
           setParsing(false);
           return;
         }
-        // Pick id column: explicit, or 'id', or first column
-        const headers = (res.meta?.fields || Object.keys(rows[0])).map(h => String(h).trim());
-        const hasExplicitId = headers.some(h => h.toLowerCase() === "id");
-        const chosen = idColumn || (hasExplicitId ? headers.find(h => h.toLowerCase() === "id") : null);
-        const items = buildItems(rows, chosen);
-
+  
+        const items = buildItems(rows);
+  
         if (!items.length) {
-          setErr("Could not infer any IDs from CSV rows.");
+          setErr("Could not build dataset from CSV rows.");
         } else {
-          onReady(items, { idColumn: chosen });
+          const folderLabels = folders.map(
+            (f, i) => f.label || `Folder ${i + 1}`
+          );
+          onReady(items, { folderLabels });   // ✅ pass labels up
         }
         setParsing(false);
       },
-      error: (e) => { setErr(String(e)); setParsing(false); }
+      error: (e) => {
+        setErr(String(e));
+        setParsing(false);
+      },
     });
-  }
-
-  function downloadJson() {
-    parseCsv(); // will call onReady; better: make onReady provide items back
   }
 
   return (
@@ -178,8 +154,12 @@ export default function DatasetUploader({ onReady, showIdField = false }) {  con
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <label className="block">
           <div className="text-sm text-slate-400 mb-1">CSV file</div>
-          <input type="file" accept=".csv" className={field}
-                 onChange={(e)=>setCsv(e.target.files?.[0]||null)} />
+          <input
+            type="file"
+            accept=".csv"
+            className={field}
+            onChange={(e) => setCsv(e.target.files?.[0] || null)}
+          />
         </label>
 
         {showIdField && (
@@ -189,35 +169,54 @@ export default function DatasetUploader({ onReady, showIdField = false }) {  con
               className={field}
               placeholder="e.g., id (leave blank to auto)"
               value={idColumn}
-              onChange={(e)=>setIdColumn(e.target.value)}
+              onChange={(e) => setIdColumn(e.target.value)}
             />
           </label>
         )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {views.map(v => (
-          <label key={v.key} className="block">
+        {folders.map((f, i) => (
+          <label key={f.key} className="block">
             <div className="text-sm text-slate-400 mb-1">
-              {v.label} folder {counts[v.key] ? <span className="text-slate-300">• {counts[v.key]} images</span> : null}
+              Folder {i + 1}{" "}
+              {counts[f.key] ? (
+                <span className="text-slate-300">• {counts[f.key]} images</span>
+              ) : null}
             </div>
-            {/* directory picker: works in Chrome/Edge/Safari */}
             <input
               type="file"
               multiple
-              // Firefox doesn't implement directory picking, but Chrome & Safari do:
               webkitdirectory="true"
               directory="true"
               className={field}
-              onChange={handleFolder(v.key)}
+              onChange={handleFolder(f.key)}
               accept="image/*"
             />
-            <div className="text-xs text-slate-500 mt-1">Pick the folder for {v.label} images</div>
+            <div className="text-xs text-slate-500 mt-1">
+              Pick the folder containing images
+            </div>
           </label>
         ))}
       </div>
 
-      {err && <div className="rounded-lg border border-rose-500/30 bg-rose-500/15 px-3 py-2 text-rose-100">{err}</div>}
+      <button
+        onClick={() =>
+          setFolders((prev) => [
+            ...prev,
+            { key: `folder${prev.length + 1}`, files: [] },
+          ])
+        }
+        className="mt-2 h-9 px-3 rounded-lg bg-slate-700 text-slate-200 text-sm hover:bg-slate-600"
+      >
+        ➕ Add another folder
+      </button>
+
+      {err && (
+        <div className="rounded-lg border border-rose-500/30 bg-rose-500/15 px-3 py-2 text-rose-100">
+          {err}
+        </div>
+      )}
 
       <div className="flex gap-3">
         <button
@@ -231,8 +230,9 @@ export default function DatasetUploader({ onReady, showIdField = false }) {  con
       </div>
 
       <div className="text-xs text-slate-400 pt-2">
-        Tip: we match images to rows using the <em>last number</em> in each filename (e.g., 17.png → id 17).
+        Tip: images are matched to rows in order. Row 1 → ID 1, Row 2 → ID 2.
       </div>
     </div>
   );
 }
+

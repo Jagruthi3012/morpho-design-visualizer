@@ -133,7 +133,7 @@ export default function CaptionParamPicker({
           <div className="flex items-center justify-between gap-2 border-t border-slate-800 p-2">
             <button
               onClick={() => onChange([])}
-              className="rounded-md px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-800/60"
+              className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500"
             >
               Clear
             </button>

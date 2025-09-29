@@ -16,6 +16,7 @@ export default function VisualizationPanel({ filteredData, onSelectItem, selecte
   const [pcDiv, setPcDiv] = useState(null);
   const [pcColorParam, setPcColorParam] = useState(""); 
   const [numericParams, setNumericParams] = useState([]);
+  const [chartFont, setChartFont] = useState("Arial, sans-serif");
   
 
   const AXIS = '#6b7280';            // labels/ticks
@@ -25,15 +26,15 @@ export default function VisualizationPanel({ filteredData, onSelectItem, selecte
   const basePlotLayout = {
     paper_bgcolor: 'rgba(0,0,0,0)',   
     plot_bgcolor: 'rgba(0,0,0,0)',
-    margin: { l: 50, r: 20, t: 40, b: 50 },
-    font: { color: AXIS },            
+    margin: { l: 80, r: 80, t: 80, b: 80 },
+    font: { color: AXIS, family: chartFont },
   };
 
   const downloadConfig = {
     displaylogo: false,
-    toImageButtonOptions: { format: 'png', scale: 2, filename: 'morpho-plot' },
+    toImageButtonOptions: { format: 'png', scale: 2, filename: 'morpho-plot'},
   };
-  
+
  // subtle grid (slate-400 @ 25%)
 
 const axis2D = {
@@ -91,8 +92,13 @@ const axis3D = {
       if (sel.length === 1) onSelectItem?.(filteredData[sel[0]]);
     };
     pcDiv.on("plotly_restyle", handler);
-    return () => pcDiv.removeListener("plotly_restyle", handler);
+    return () => {
+      if (pcDiv.off) {
+        pcDiv.off("plotly_restyle", handler);   // ✅ correct cleanup
+      }
+    };
   }, [pcDiv, filteredData, onSelectItem]);
+  
 
   const ids = filteredData.map((d) => `ID: ${d.id}`);
   const x2dVals = filteredData.map((d) => d.params[x2d]);
@@ -146,6 +152,20 @@ const axis3D = {
     <div>
       <h2 className="text-xl font-semibold mb-4">Visualizations</h2>
 
+      <div className="flex flex-col gap-2 w-60 mb-4">
+  <label className="text-slate-400 font-semibold">Chart Font</label>
+  <select
+    className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 outline-none focus:ring-2 focus:ring-indigo-500/50"
+    value={chartFont}
+    onChange={(e) => setChartFont(e.target.value)}
+  >
+    <option value="Arial, sans-serif">Arial</option>
+    <option value="'Times New Roman', serif">Times New Roman</option>
+    <option value="'Courier New', monospace">Courier New</option>
+    <option value="Verdana, sans-serif">Verdana</option>
+  </select>
+</div>
+
       {/* 2D controls */}
       <div className="flex flex-wrap items-end gap-4 mb-3">
         <div className="flex flex-col gap-2 w-60">
@@ -164,11 +184,11 @@ const axis3D = {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-2 shadow-lg w-full max-w-5xl mx-auto">
+      <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-lg">
   <Plot
     className="w-full"
     useResizeHandler
-    style={{ width: '100%', height: 450 }}
+    style={{ width: '100%', height: 600 }}
     data={[
       {
         x: x2dVals,
@@ -204,7 +224,7 @@ const axis3D = {
 
 
       {/* 3D controls */}
-      <div className="flex flex-wrap items-end gap-4 mt-6 mb-3">
+      <div className="flex flex-wrap items-end gap-4 mt-6 mb-3 justify-start">
         {[
           { label: "3D Plot: X", val: x3d, set: setX3d },
           { label: "Y", val: y3d, set: setY3d },
@@ -220,11 +240,11 @@ const axis3D = {
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-2 shadow-lg w-full max-w-5xl mx-auto">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-2 shadow-lg w-full max-w-5xl mx-auto mt-6">
       <Plot
   className="w-full"
   useResizeHandler
-  style={{ width: '100%', height: 520 }}
+  style={{ width: '100%', height: 700 }}
   data={[
     {
       x: x3dVals,
@@ -234,9 +254,9 @@ const axis3D = {
       type: 'scatter3d',
       mode: 'markers',
       marker: {
-        size: 8,               // bigger 3D dots
+        size: 8,
         opacity: 0.9,
-        color: 'rgba(236,72,153,0.9)', // fuchsia-ish
+        color: 'rgba(236,72,153,0.9)',
       },
       hovertemplate:
         `<b>${x3d}</b>: %{x}<br><b>${y3d}</b>: %{y}<br><b>${z3d}</b>: %{z}<extra></extra>`,
@@ -244,16 +264,29 @@ const axis3D = {
   ]}
   layout={{
     ...basePlotLayout,
+    width: 1000,   // explicit export width
+    height: 800,   // explicit export height
+    margin: { l: 100, r: 100, t: 100, b: 100 },
     title: { text: `${x3d} vs ${y3d} vs ${z3d}`, font: { color: AXIS } },
     scene: {
       bgcolor: 'rgba(0,0,0,0)',
+      aspectmode: "cube",   // force equal axis lengths
       xaxis: { ...axis3D, title: { text: x3d, font: { color: AXIS } } },
       yaxis: { ...axis3D, title: { text: y3d, font: { color: AXIS } } },
       zaxis: { ...axis3D, title: { text: z3d, font: { color: AXIS } } },
     },
     autosize: true,
   }}
-  config={downloadConfig}
+  config={{
+    ...downloadConfig,
+    toImageButtonOptions: {
+      format: 'png',
+      scale: 2,
+      filename: 'morpho-3dplot',
+      width: 2000,   
+      height: 1600,
+    },
+  }}
   onClick={handlePointClick}
 />
       </div>
@@ -305,7 +338,7 @@ const axis3D = {
             }]}
             useResizeHandler
  style={{ width: '100%', height: 520 }}
- layout={{ ...basePlotLayout, autosize: true, height: 520, margin: { l: 24, r: 24, t: 40, b: 24 } }}
+ layout={{ ...basePlotLayout, autosize: true, height: 520, margin: { l: 80, r: 80, t: 60, b: 40 } }}
  config={{ responsive: true }}
             onInitialized={(fig, gd) => setPcDiv(gd)}
             onUpdate={(fig, gd) => setPcDiv(gd)}
