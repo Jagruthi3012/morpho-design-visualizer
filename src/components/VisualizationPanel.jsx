@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import Plot from "react-plotly.js";
+import Plotly from "plotly.js-dist-min";
 import CaptionParamPicker from "./CaptionParamPicker";
 
 export default function VisualizationPanel({ filteredData, onSelectItem, selectedItem }) {
@@ -98,6 +99,39 @@ const axis3D = {
       }
     };
   }, [pcDiv, filteredData, onSelectItem]);
+
+  // useEffect(() => {
+  //   const buttons = document.querySelectorAll(".modebar-btn[data-title='Download plot as a png']");
+  //   buttons.forEach(btn => {
+  //     btn.onclick = () => {
+  //       const gd = document.querySelector(".js-plotly-plot");  // pick your plot div
+  //       if (!gd) return;
+  
+  //       // Make a copy of layout with bigger fonts
+  //       const bigFontLayout = {
+  //         ...gd.layout,
+  //         font: { family: chartFont, size: 28, color: AXIS },
+  //         title: { ...gd.layout.title, font: { size: 32, color: AXIS } },
+  //         scene: {
+  //           ...gd.layout.scene,
+  //           xaxis: { ...gd.layout.scene.xaxis, title: { font: { size: 28 } }, tickfont: { size: 22 } },
+  //           yaxis: { ...gd.layout.scene.yaxis, title: { font: { size: 28 } }, tickfont: { size: 22 } },
+  //           zaxis: { ...gd.layout.scene.zaxis, title: { font: { size: 28 } }, tickfont: { size: 22 } },
+  //         },
+  //       };
+  
+  //       Plotly.downloadImage(gd, {
+  //         format: "png",
+  //         filename: "morpho-3dplot",
+  //         width: 2000,
+  //         height: 1600,
+  //         scale: 2,
+  //         layout: bigFontLayout,
+  //       });
+  //     };
+  //   });
+  // }, [chartFont]);
+  
   
 
   const ids = filteredData.map((d) => `ID: ${d.id}`);
@@ -201,7 +235,7 @@ const axis3D = {
           color: 'rgba(99,102,241,0.85)',
         },
         hovertemplate:
-  `ID %{text}<br><b>${x2d}</b>: %{x}<br><b>${y2d}</b>: %{y}<extra></extra>`,
+  `%{text}<br><b>${x2d}</b>: %{x}<br><b>${y2d}</b>: %{y}<extra></extra>`,
 text: ids,
       },
     ]}
@@ -245,52 +279,81 @@ text: ids,
       <Plot
   className="w-full"
   useResizeHandler
-  style={{ width: '100%', height: 700 }}
+  style={{ width: "100%", height: 700 }}
   data={[
     {
       x: x3dVals,
       y: y3dVals,
       z: z3dVals,
       text: ids,
-      type: 'scatter3d',
-      mode: 'markers',
+      type: "scatter3d",
+      mode: "markers",
       marker: {
         size: 8,
         opacity: 0.9,
-        color: 'rgba(236,72,153,0.9)',
+        color: "rgba(236,72,153,0.9)",
       },
       hovertemplate:
-  `ID %{text}<br><b>${x3d}</b>: %{x}<br><b>${y3d}</b>: %{y}<br><b>${z3d}</b>: %{z}<extra></extra>`,
-text: ids,
+        `%{text}<br><b>${x3d}</b>: %{x}<br><b>${y3d}</b>: %{y}<br><b>${z3d}</b>: %{z}<extra></extra>`,
     },
   ]}
   layout={{
     ...basePlotLayout,
-    width: 1000,   // explicit export width
-    height: 800,   // explicit export height
+    width: 1000,
+    height: 800,
     margin: { l: 100, r: 100, t: 100, b: 100 },
-    title: { text: `${x3d} vs ${y3d} vs ${z3d}`, font: { color: AXIS } },
+    title: { text: `${x3d} vs ${y3d} vs ${z3d}`, font: { color: AXIS, size: 16 } }, // normal screen
+    font: { family: chartFont, color: AXIS, size: 14 },
     scene: {
-      bgcolor: 'rgba(0,0,0,0)',
-      aspectmode: "cube",   // force equal axis lengths
-      xaxis: { ...axis3D, title: { text: x3d, font: { color: AXIS } } },
-      yaxis: { ...axis3D, title: { text: y3d, font: { color: AXIS } } },
-      zaxis: { ...axis3D, title: { text: z3d, font: { color: AXIS } } },
+      bgcolor: "rgba(0,0,0,0)",
+      aspectmode: "cube",
+      xaxis: { ...axis3D, title: { text: x3d }, tickfont: { size: 12, color: AXIS } },
+      yaxis: { ...axis3D, title: { text: y3d }, tickfont: { size: 12, color: AXIS } },
+      zaxis: { ...axis3D, title: { text: z3d }, tickfont: { size: 12, color: AXIS } },
     },
-    autosize: true,
   }}
   config={{
-    ...downloadConfig,
-    toImageButtonOptions: {
-      format: 'png',
-      scale: 2,
-      filename: 'morpho-3dplot',
-      width: 2000,   
-      height: 1600,
-    },
+    displaylogo: false,
+    modeBarButtonsToRemove: ["toImage"],   // remove default download
+    modeBarButtonsToAdd: [
+      {
+        name: "Download plot (large font)",
+        icon: Plotly.Icons.camera,
+        click: (gd) => {
+          const originalLayout = { ...gd.layout };
+
+          // temporarily enlarge fonts
+          const bigLayout = {
+            ...gd.layout,
+            font: { family: chartFont, size: 28, color: AXIS },
+            title: { ...gd.layout.title, font: { size: 32, color: AXIS } },
+            scene: {
+              ...gd.layout.scene,
+              xaxis: { ...gd.layout.scene.xaxis, title: { text: x3d, font: { size: 28 } }, tickfont: { size: 18 } },
+              yaxis: { ...gd.layout.scene.yaxis, title: { text: y3d, font: { size: 28 } }, tickfont: { size: 18 } },
+              zaxis: { ...gd.layout.scene.zaxis, title: { text: z3d, font: { size: 28 } }, tickfont: { size: 18 } },
+            },
+          };
+
+          Plotly.relayout(gd, bigLayout).then(() => {
+            return Plotly.downloadImage(gd, {
+              format: "png",
+              width: 2000,
+              height: 1600,
+              scale: 2,
+              filename: "morpho-3dplot",
+            });
+          }).then(() => {
+            // restore original layout
+            Plotly.relayout(gd, originalLayout);
+          });
+        },
+      },
+    ],
   }}
   onClick={handlePointClick}
 />
+
       </div>
 
       {/* Parallel Coordinates */}
