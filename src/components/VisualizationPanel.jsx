@@ -201,7 +201,8 @@ const axis3D = {
           color: 'rgba(99,102,241,0.85)',
         },
         hovertemplate:
-          `<b>${x2d}</b>: %{x}<br><b>${y2d}</b>: %{y}<br><extra></extra>`
+  `ID %{text}<br><b>${x2d}</b>: %{x}<br><b>${y2d}</b>: %{y}<extra></extra>`,
+text: ids,
       },
     ]}
     layout={{
@@ -259,7 +260,8 @@ const axis3D = {
         color: 'rgba(236,72,153,0.9)',
       },
       hovertemplate:
-        `<b>${x3d}</b>: %{x}<br><b>${y3d}</b>: %{y}<br><b>${z3d}</b>: %{z}<extra></extra>`,
+  `ID %{text}<br><b>${x3d}</b>: %{x}<br><b>${y3d}</b>: %{y}<br><b>${z3d}</b>: %{z}<extra></extra>`,
+text: ids,
     },
   ]}
   layout={{

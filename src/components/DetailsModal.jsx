@@ -49,7 +49,7 @@ export default function DetailsModal({ item, view = "front", onClose, folderLabe
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div className="w-full max-w-4xl rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl">
           <div className="flex items-center justify-between border-b border-slate-800 p-4">
-            <h3 className="text-lg font-semibold">Design details</h3>
+            <h3 className="text-lg font-semibold">Design details (ID {item.id})</h3>
             <button
               onClick={onClose}
               className="h-8 w-8 grid place-items-center rounded-md bg-slate-900"
@@ -127,16 +127,20 @@ export default function DetailsModal({ item, view = "front", onClose, folderLabe
 
               {/* Parameters */}
               <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                  {Object.entries(item.params || {}).map(([k, v]) => (
-                    <div key={k}>
-                      <dt className="text-slate-400 text-sm">{k}</dt>
-                      <dd className="font-medium text-slate-100">
-                        {typeof v === "number" ? v.toFixed(2) : String(v)}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+  <div>
+    <dt className="text-slate-400 text-sm">Solution ID</dt>
+    <dd className="font-medium text-slate-100">{item.id}</dd>
+  </div>
+  {Object.entries(item.params || {}).map(([k, v]) => (
+    <div key={k}>
+      <dt className="text-slate-400 text-sm">{k}</dt>
+      <dd className="font-medium text-slate-100">
+        {typeof v === "number" ? v.toFixed(2) : String(v)}
+      </dd>
+    </div>
+  ))}
+</dl>
               </div>
             </div>
           </div>

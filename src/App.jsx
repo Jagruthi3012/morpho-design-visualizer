@@ -93,7 +93,8 @@ function SidePanel({ open, onClose, title = "Visualizations", children }) {
 }
 
 function App() {
-  const { data: defaultData, loading } = useData();
+  const { data: defaultDataRaw, loading } = useData();
+  const defaultData = defaultDataRaw.map((d, i) => ({ ...d, id: i + 1 }));
   const [uploadedData, setUploadedData] = useState([]);
   const data = uploadedData.length ? uploadedData : defaultData;
   const [isFiltered, setIsFiltered] = useState(false);
@@ -330,6 +331,10 @@ function App() {
     <DatasetUploader
      showIdField={false}              // hide the ID column input
       onReady={(items, { folderLabels }) => {
+        const withIds = items.map((d, i) => ({
+          ...d,
+          id: i + 1,  
+        }));
        setUploadedData(items); 
        setFolderLabels(folderLabels);       // switch app to the uploaded dataset
        setFilteredData([]);           // clear filters/sort
