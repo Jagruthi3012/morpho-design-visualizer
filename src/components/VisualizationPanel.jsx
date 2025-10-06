@@ -299,17 +299,22 @@ text: ids,
   ]}
   layout={{
     ...basePlotLayout,
+    autosize: true,
     width: 1000,
     height: 800,
-    margin: { l: 100, r: 100, t: 100, b: 100 },
-    title: { text: `${x3d} vs ${y3d} vs ${z3d}`, font: { color: AXIS, size: 16 } }, // normal screen
-    font: { family: chartFont, color: AXIS, size: 14 },
+    margin: { l: 80, r: 80, t: 40, b: 60 }, 
+    title: { 
+      text: `${x3d} vs ${y3d} vs ${z3d}`, 
+      font: { color: AXIS, size: 26 }, 
+      y: 0.96, 
+    },
+    font: { family: chartFont, color: AXIS, size: 18 }, 
     scene: {
       bgcolor: "rgba(0,0,0,0)",
       aspectmode: "cube",
-      xaxis: { ...axis3D, title: { text: x3d }, tickfont: { size: 12, color: AXIS } },
-      yaxis: { ...axis3D, title: { text: y3d }, tickfont: { size: 12, color: AXIS } },
-      zaxis: { ...axis3D, title: { text: z3d }, tickfont: { size: 12, color: AXIS } },
+      xaxis: { ...axis3D, title: { text: x3d, font: { size: 20 } }, tickfont: { size: 16, color: AXIS } },
+      yaxis: { ...axis3D, title: { text: y3d, font: { size: 20 } }, tickfont: { size: 16, color: AXIS } },
+      zaxis: { ...axis3D, title: { text: z3d, font: { size: 20 } }, tickfont: { size: 16, color: AXIS } },
     },
   }}
   config={{
@@ -326,12 +331,12 @@ text: ids,
           const bigLayout = {
             ...gd.layout,
             font: { family: chartFont, size: 28, color: AXIS },
-            title: { ...gd.layout.title, font: { size: 32, color: AXIS } },
+            title: { ...gd.layout.title, font: { size: 34, color: AXIS } },
             scene: {
               ...gd.layout.scene,
-              xaxis: { ...gd.layout.scene.xaxis, title: { text: x3d, font: { size: 28 } }, tickfont: { size: 18 } },
-              yaxis: { ...gd.layout.scene.yaxis, title: { text: y3d, font: { size: 28 } }, tickfont: { size: 18 } },
-              zaxis: { ...gd.layout.scene.zaxis, title: { text: z3d, font: { size: 28 } }, tickfont: { size: 18 } },
+              xaxis: { ...gd.layout.scene.xaxis, title: { text: x3d, font: { size: 32 } }, tickfont: { size: 20 } },
+              yaxis: { ...gd.layout.scene.yaxis, title: { text: y3d, font: { size: 32 } }, tickfont: { size: 20 } },
+              zaxis: { ...gd.layout.scene.zaxis, title: { text: z3d, font: { size: 32 } }, tickfont: { size: 20 } },
             },
           };
 
