@@ -408,7 +408,14 @@ text: ids,
             }]}
             useResizeHandler
  style={{ width: '100%', height: 520 }}
- layout={{ ...basePlotLayout, autosize: true, height: 520, margin: { l: 80, r: 80, t: 60, b: 40 } }}
+ layout={{
+  ...basePlotLayout,
+  autosize: true,
+  height: 600,
+  margin: { l: 80, r: 80, t: 60, b: 40 },
+  font: { family: chartFont, size: 20, color: AXIS },   
+  title: { font: { size: 20, color: AXIS } },
+}}
  config={{ responsive: true }}
             onInitialized={(fig, gd) => setPcDiv(gd)}
             onUpdate={(fig, gd) => setPcDiv(gd)}
