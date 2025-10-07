@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import Plot from "react-plotly.js";
 import Plotly from "plotly.js-dist-min";
@@ -99,40 +98,6 @@ const axis3D = {
       }
     };
   }, [pcDiv, filteredData, onSelectItem]);
-
-  // useEffect(() => {
-  //   const buttons = document.querySelectorAll(".modebar-btn[data-title='Download plot as a png']");
-  //   buttons.forEach(btn => {
-  //     btn.onclick = () => {
-  //       const gd = document.querySelector(".js-plotly-plot");  // pick your plot div
-  //       if (!gd) return;
-  
-  //       // Make a copy of layout with bigger fonts
-  //       const bigFontLayout = {
-  //         ...gd.layout,
-  //         font: { family: chartFont, size: 28, color: AXIS },
-  //         title: { ...gd.layout.title, font: { size: 32, color: AXIS } },
-  //         scene: {
-  //           ...gd.layout.scene,
-  //           xaxis: { ...gd.layout.scene.xaxis, title: { font: { size: 28 } }, tickfont: { size: 22 } },
-  //           yaxis: { ...gd.layout.scene.yaxis, title: { font: { size: 28 } }, tickfont: { size: 22 } },
-  //           zaxis: { ...gd.layout.scene.zaxis, title: { font: { size: 28 } }, tickfont: { size: 22 } },
-  //         },
-  //       };
-  
-  //       Plotly.downloadImage(gd, {
-  //         format: "png",
-  //         filename: "morpho-3dplot",
-  //         width: 2000,
-  //         height: 1600,
-  //         scale: 2,
-  //         layout: bigFontLayout,
-  //       });
-  //     };
-  //   });
-  // }, [chartFont]);
-  
-  
 
   const ids = filteredData.map((d) => `ID: ${d.id}`);
   const x2dVals = filteredData.map((d) => d.params[x2d]);
@@ -321,39 +286,52 @@ text: ids,
     displaylogo: false,
     modeBarButtonsToRemove: ["toImage"],   // remove default download
     modeBarButtonsToAdd: [
-      {
-        name: "Download plot (large font)",
-        icon: Plotly.Icons.camera,
-        click: (gd) => {
-          const originalLayout = { ...gd.layout };
-
-          // temporarily enlarge fonts
-          const bigLayout = {
-            ...gd.layout,
-            font: { family: chartFont, size: 28, color: AXIS },
-            title: { ...gd.layout.title, font: { size: 34, color: AXIS } },
-            scene: {
-              ...gd.layout.scene,
-              xaxis: { ...gd.layout.scene.xaxis, title: { text: x3d, font: { size: 32 } }, tickfont: { size: 20 } },
-              yaxis: { ...gd.layout.scene.yaxis, title: { text: y3d, font: { size: 32 } }, tickfont: { size: 20 } },
-              zaxis: { ...gd.layout.scene.zaxis, title: { text: z3d, font: { size: 32 } }, tickfont: { size: 20 } },
-            },
-          };
-
-          Plotly.relayout(gd, bigLayout).then(() => {
-            return Plotly.downloadImage(gd, {
+        {
+          name: "Download plot (large font)",
+          icon: Plotly.Icons.camera,
+          click: (gd) => {
+            // make a deep copy of figure
+            const figure = {
+              data: gd.data,
+              layout: {
+                ...gd.layout,
+                font: { family: chartFont, size: 38, color: AXIS },
+                title: { ...gd.layout.title, font: { size: 44, color: AXIS } },
+                scene: {
+                  ...gd.layout.scene,
+                  xaxis: {
+                    ...gd.layout.scene.xaxis,
+                    title: { text: gd.layout.scene.xaxis.title.text, font: { size: 36 } ,standoff: 30,},
+                    tickfont: { size: 20 },
+                  },
+                  yaxis: {
+                    ...gd.layout.scene.yaxis,
+                    title: { text: gd.layout.scene.yaxis.title.text, font: { size: 36 } ,standoff: 30,},
+                    tickfont: { size: 20 },
+                  },
+                  zaxis: {
+                    ...gd.layout.scene.zaxis,
+                    title: { text: gd.layout.scene.zaxis.title.text, font: { size: 36 } ,standoff: 30,},
+                    tickfont: { size: 20 },
+                  },
+                },
+              },
+            };
+        
+            // generate image directly from the figure object (no relayout flicker)
+            Plotly.toImage(figure, {
               format: "png",
               width: 2000,
               height: 1600,
               scale: 2,
-              filename: "morpho-3dplot",
+            }).then((url) => {
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "morpho-3dplot.png";
+              a.click();
             });
-          }).then(() => {
-            // restore original layout
-            Plotly.relayout(gd, originalLayout);
-          });
-        },
-      },
+          },
+        }
     ],
   }}
   onClick={handlePointClick}
