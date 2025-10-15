@@ -240,59 +240,106 @@ text: ids,
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-2 shadow-lg w-full max-w-5xl mx-auto mt-6">
-      <Plot
-  className="w-full"
-  useResizeHandler
-  style={{ width: "100%", height: 700 }}
-  data={[
-    {
-      x: x3dVals,
-      y: y3dVals,
-      z: z3dVals,
-      text: ids,
-      type: "scatter3d",
-      mode: "markers",
-      marker: {
-        size: 8,
-        opacity: 0.9,
-        color: "rgba(236,72,153,0.9)",
-      },
-      hovertemplate:
-        `%{text}<br><b>${x3d}</b>: %{x}<br><b>${y3d}</b>: %{y}<br><b>${z3d}</b>: %{z}<extra></extra>`,
-    },
-  ]}
-  layout={{
-    ...basePlotLayout,
-    autosize: true,
-    width: 1000,
-    height: 800,
-    margin: { l: 80, r: 80, t: 40, b: 60 }, 
-    title: { 
-      text: `${x3d} vs ${y3d} vs ${z3d}`, 
-      font: { color: AXIS, size: 26 }, 
-      y: 0.96, 
-    },
-    font: { family: chartFont, color: AXIS, size: 18 }, 
-    scene: {
-      bgcolor: "rgba(0,0,0,0)",
-      aspectmode: "cube",
-      xaxis: { ...axis3D, title: { text: x3d, font: { size: 20 } }, tickfont: { size: 16, color: AXIS } },
-      yaxis: { ...axis3D, title: { text: y3d, font: { size: 20 } }, tickfont: { size: 16, color: AXIS } },
-      zaxis: { ...axis3D, title: { text: z3d, font: { size: 20 } }, tickfont: { size: 16, color: AXIS } },
-    },
+      <div
+  className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg w-full mx-auto mt-6 flex justify-center"
+  style={{
+    maxWidth: "90vw", // ensures it's wide but not overflowing
+    overflow: "hidden", // prevents grid spill
   }}
+>
+  <Plot
+    className="w-full"
+    useResizeHandler
+    style={{
+      width: "100%",
+      height: "750px",  // slightly taller for full fit
+    }}
+    data={[
+      {
+        x: x3dVals,
+        y: y3dVals,
+        z: z3dVals,
+        text: ids,
+        type: "scatter3d",
+        mode: "markers",
+        marker: {
+          size: 8,
+          opacity: 0.9,
+          color: "rgba(236,72,153,0.9)",
+        },
+        hovertemplate: `%{text}<br><b>${x3d}</b>: %{x}<br><b>${y3d}</b>: %{y}<br><b>${z3d}</b>: %{z}<extra></extra>`,
+      },
+    ]}
+    layout={{
+      ...basePlotLayout,
+      autosize: true,
+      margin: { l: 0, r: 0, t: 40, b: 20 }, // ✅ tighter margin, avoids overflow
+      title: {
+        text: `${x3d} vs ${y3d} vs ${z3d}`,
+        font: { color: AXIS, size: 24 },
+        y: 0.98,
+        xanchor: "center",
+        yanchor: "top",
+      },
+      font: { family: chartFont, color: AXIS, size: 18 },
+      scene: {
+        bgcolor: "rgba(0,0,0,0)",
+        aspectmode: "cube",
+        camera: { eye: { x: 1.6, y: 1.6, z: 1.1 } }, // ✅ smoother view angle
+        xaxis: {
+          ...axis3D,
+          title: { text: x3d, font: { size: 18 } },
+          tickfont: { size: 14, color: AXIS },
+          range: [Math.min(...x3dVals), Math.max(...x3dVals)],
+        },
+        yaxis: {
+          ...axis3D,
+          title: { text: y3d, font: { size: 18 } },
+          tickfont: { size: 14, color: AXIS },
+          range: [Math.min(...y3dVals), Math.max(...y3dVals)],
+        },
+        zaxis: {
+          ...axis3D,
+          title: { text: z3d, font: { size: 18 } },
+          tickfont: { size: 14, color: AXIS },
+          range: [Math.min(...z3dVals), Math.max(...z3dVals)],
+        },
+      },
+    }}
   config={{
     displaylogo: false,
-    modeBarButtonsToRemove: ["toImage"],   // remove default download
+    modeBarButtonsToRemove: ["toImage"],   
     modeBarButtonsToAdd: [
         {
-          name: "Download plot (large font)",
+          name: "Download plot as PNG",
           icon: Plotly.Icons.camera,
           click: (gd) => {
-            // make a deep copy of figure
+            // compute small padding based on data ranges
+            const xRange = [
+              Math.min(...x3dVals),
+              Math.max(...x3dVals)
+            ];
+            const yRange = [
+              Math.min(...y3dVals),
+              Math.max(...y3dVals)
+            ];
+            const zRange = [
+              Math.min(...z3dVals),
+              Math.max(...z3dVals)
+            ];
+          
+            const xPad = 0.05 * (xRange[1] - xRange[0]);
+            const yPad = 0.05 * (yRange[1] - yRange[0]);
+            const zPad = 0.05 * (zRange[1] - zRange[0]);
+          
             const figure = {
-              data: gd.data,
+              data: gd.data.map(trace => ({
+                ...trace,
+                marker: {
+                  ...trace.marker,
+                  size: (trace.marker?.size || 8) * 2.5, 
+                },
+              })),
               layout: {
                 ...gd.layout,
                 font: { family: chartFont, size: 38, color: AXIS },
@@ -301,24 +348,26 @@ text: ids,
                   ...gd.layout.scene,
                   xaxis: {
                     ...gd.layout.scene.xaxis,
-                    title: { text: gd.layout.scene.xaxis.title.text, font: { size: 36 } ,standoff: 30,},
+                    range: [xRange[0] - xPad, xRange[1] + xPad], 
+                    title: { text: x3d, font: { size: 36 } },
                     tickfont: { size: 20 },
                   },
                   yaxis: {
                     ...gd.layout.scene.yaxis,
-                    title: { text: gd.layout.scene.yaxis.title.text, font: { size: 36 } ,standoff: 30,},
+                    range: [yRange[0] - yPad, yRange[1] + yPad],
+                    title: { text: y3d, font: { size: 36 } },
                     tickfont: { size: 20 },
                   },
                   zaxis: {
                     ...gd.layout.scene.zaxis,
-                    title: { text: gd.layout.scene.zaxis.title.text, font: { size: 36 } ,standoff: 30,},
+                    range: [zRange[0] - zPad, zRange[1] + zPad],
+                    title: { text: z3d, font: { size: 36 } },
                     tickfont: { size: 20 },
                   },
                 },
               },
             };
-        
-            // generate image directly from the figure object (no relayout flicker)
+          
             Plotly.toImage(figure, {
               format: "png",
               width: 2000,
@@ -332,13 +381,13 @@ text: ids,
             });
           },
         }
-    ],
-  }}
-  onClick={handlePointClick}
-/>
+      ],
+    }}
+    onClick={handlePointClick}
+  />
 
       </div>
-
+      
       {/* Parallel Coordinates */}
       <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-lg">
         <div className="text-lg font-semibold mb-3">Parallel Coordinates</div>
@@ -358,48 +407,96 @@ text: ids,
             Tip: drag on an axis to brush a range. If brushing narrows to one line, its details will open.
           </span>
         </div>
+        <div
+  className="rounded-xl border border-slate-800 bg-slate-900 p-2 shadow overflow-x-auto"
+  style={{
+    whiteSpace: "nowrap",
+    maxWidth: "100%",
+    minHeight: "560px",
+    overflowX: "auto",
+    scrollbarWidth: "thin",
+  }}
+>
+  <div className="flex flex-col gap-2 mb-2" style={{ width: "fit-content" }}>
+    <label className="text-slate-400 font-semibold">Color by parameter</label>
+    <select
+      className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100"
+      value={pcColorParam}
+      onChange={(e) => setPcColorParam(e.target.value)}
+    >
+      {numericParams.map((p) => (
+        <option key={p} value={p}>{p}</option>
+      ))}
+    </select>
+  </div>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-2 shadow">
-        <div className="flex flex-col gap-2 mb-2">
-  <label className="text-slate-400 font-semibold">Color by parameter</label>
-  <select
-    className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100"
-    value={pcColorParam}
-    onChange={(e) => setPcColorParam(e.target.value)}
+  {/* ✅ Scrollable container for wide axis spacing */}
+  <div
+  style={{
+    width: "100%",
+    overflowX: "auto",
+    overflowY: "hidden",
+    paddingBottom: "10px",
+  }}
+>
+  <div
+    style={{
+      // ✅ Dynamically control how much width to allocate
+      // If few axes → expand to fill screen (e.g., 100%)
+      // If many axes → make it wider to enable horizontal scrolling
+      minWidth:
+        pcParams.length <= 3
+          ? "100%" // fill entire screen width
+          : `${Math.max(1600, 300 * pcParams.length)}px`, // scrollable for many axes
+      height: "560px",
+      display: "inline-block",
+    }}
   >
-    {numericParams.map((p) => (
-      <option key={p} value={p}>{p}</option>
-    ))}
-  </select>
+    <Plot
+      data={[
+        {
+          type: "parcoords",
+          line: {
+            color: pcColorParam
+              ? filteredData.map((d) => d.params[pcColorParam])
+              : filteredData.map((_, i) => i),
+            colorscale: "Viridis",
+            showscale: true,
+            colorbar: {
+              thickness: 20,
+              len: 0.8,
+              x: 1.02, // ✅ slightly offset from axes
+              y: 0.5,
+              outlinewidth: 0,
+              tickfont: { color: AXIS, size: 14 },
+            },
+          },
+          dimensions: pcDimensions.map((dim) => ({
+            ...dim,
+            labelangle: -45,
+            tickfont: { color: AXIS, size: 14 },
+            labelfont: { color: AXIS, size: 16 },
+          })),
+          domain: { x: [0, 1], y: [0, 1] },
+        },
+      ]}
+      layout={{
+        ...basePlotLayout,
+        autosize: true,
+        height: 600,
+        margin: { l: 80, r: 100, t: 60, b: 40 },
+        font: { family: chartFont, size: 18, color: AXIS },
+      }}
+      config={{ responsive: true }}
+      useResizeHandler
+      onInitialized={(fig, gd) => setPcDiv(gd)}
+      onUpdate={(fig, gd) => setPcDiv(gd)}
+      style={{ width: "100%", height: "100%" }}
+    />
+  </div>
 </div>
-          <Plot
-            data={[{
-              type: "parcoords",
-              line: {
-                color: pcColorParam
-                  ? filteredData.map((d) => d.params[pcColorParam])
-                  : filteredData.map((_, i) => i),
-                colorscale: "Viridis",   // or any Plotly scale
-                showscale: true,
-              },
-              dimensions: pcDimensions,
-            }]}
-            useResizeHandler
- style={{ width: '100%', height: 520 }}
- layout={{
-  ...basePlotLayout,
-  autosize: true,
-  height: 600,
-  margin: { l: 80, r: 80, t: 60, b: 40 },
-  font: { family: chartFont, size: 20, color: AXIS },   
-  title: { font: { size: 20, color: AXIS } },
-}}
- config={{ responsive: true }}
-            onInitialized={(fig, gd) => setPcDiv(gd)}
-            onUpdate={(fig, gd) => setPcDiv(gd)}
-          />
+</div>
         </div>
-      </div>
     </div>
   );
 }
