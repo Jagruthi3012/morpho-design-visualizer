@@ -1,6 +1,6 @@
 import FilterPanel from "./components/FilterPanel";
 import DatasetUploader from "./components/DatasetUploader";
-import useData from "./hooks/useData";
+// import useData from "./hooks/useData";
 import ImageCard from "./components/ImageCard";
 import DetailsModal from "./components/DetailsModal";
 import VisualizationPanel from "./components/VisualizationPanel";
@@ -93,10 +93,8 @@ function SidePanel({ open, onClose, title = "Visualizations", children }) {
 }
 
 function App() {
-  const { data: defaultDataRaw, loading } = useData();
-  const defaultData = defaultDataRaw.map((d, i) => ({ ...d, id: i + 1 }));
   const [uploadedData, setUploadedData] = useState([]);
-  const data = uploadedData.length ? uploadedData : defaultData;
+  const data = uploadedData;
   const [isFiltered, setIsFiltered] = useState(false);
   const [noResults, setNoResults] = useState(false);
   const [selectedView, setSelectedView] = useState("front");
@@ -154,109 +152,89 @@ function App() {
   const totalCount = data.length;
   const shownCount = displayed.length;
 
-  if (loading && uploadedData.length === 0) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        <div className="max-w-7xl mx-auto p-6">
-        <div className="flex items-center gap-3 mb-6">
-  <img
-    src={MorphoLogo}
-    alt="Morpho logo"
-    className="h-9 w-9 rounded-md ring-1 ring-slate-700/60 bg-slate-900 object-contain"
-  />
-  <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 to-emerald-400 bg-clip-text text-transparent">
-    Morpho Design Explorer
-  </h1>
-</div>
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg">
-            Loading…
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-dvh w-full overflow-hidden"> {/* fixed viewport shell, never resizes */}
-    <div className="h-full w-full overflow-y-scroll [scrollbar-gutter:stable] overflow-x-hidden">
+return (
+  <div className="h-screen flex flex-col bg-slate-950 text-slate-100">
     {noResults && <NoResultsToast onClose={() => setNoResults(false)} />}
-      {/* Result count fixed top-right */}
-<div className="fixed top-4 right-6 z-50">
-  <span className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-sm font-medium text-slate-200 shadow-lg backdrop-blur">
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M10 8h4M8 12h8M9 16h6" />
-    </svg>
-    {isFiltered
-      ? `${shownCount} / ${totalCount} results`
-      : `${totalCount} results`}
-  </span>
-</div>
-    <div className="mx-auto w-full max-w-none px-4 sm:px-6 lg:px-8 py-6">
-  <div className="flex items-center gap-3 mb-6">
-    <img
-      src={MorphoLogo}
-      alt="Morpho logo"
-      className="h-10 w-10 shrink-0 rounded-md ring-1 ring-slate-700/60 bg-slate-900 object-contain"
-    />
-    <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-none bg-gradient-to-r from-indigo-400 to-emerald-400 bg-clip-text text-transparent">
-      Morpho Design Explorer
-    </h1>
-    <div className="ml-auto">
-      <button
-        onClick={() => setOpenUploader(true)}
-        className="h-10 px-4 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow"
-        title="Upload CSV + image folders"
-      >
-        Upload Dataset
-      </button>
-    </div>
-  </div>
-</div>
 
-{showDatasetToast && (
-  <Toast onClose={() => setShowDatasetToast(false)}>
-    Using uploaded dataset ({uploadedData.length} items)
-  </Toast>
+    {/* Fixed result counter (top-right) */}
+    {uploadedData.length > 0 && (
+  <div className="fixed top-4 right-6 z-50">
+    <span className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-sm font-medium text-slate-200 shadow-lg backdrop-blur">
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M10 8h4M8 12h8M9 16h6" />
+      </svg>
+      {isFiltered
+        ? `${shownCount} / ${totalCount} results`
+        : `${totalCount} results`}
+    </span>
+  </div>
 )}
 
+    {/* Scrollable main area */}
+    <div className="flex-1 overflow-y-auto">
+    <div className="w-full px-8 sm:px-10 lg:px-1 py-10 flex flex-col gap-8 min-h-full">
+
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <img
+            src={MorphoLogo}
+            alt="Morpho logo"
+            className="h-10 w-10 shrink-0 rounded-md ring-1 ring-slate-700/60 bg-slate-900 object-contain"
+          />
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-none bg-gradient-to-r from-indigo-400 to-emerald-400 bg-clip-text text-transparent">
+            Morpho Visualizer
+          </h1>
+          <div className="ml-auto">
+            <button
+              onClick={() => setOpenUploader(true)}
+              className="h-10 px-4 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow"
+            >
+              Upload Dataset
+            </button>
+          </div>
+        </div>
+
+        {showDatasetToast && (
+          <Toast onClose={() => setShowDatasetToast(false)}>
+            Using uploaded dataset ({uploadedData.length} items)
+          </Toast>
+        )}
+
         {/* Filters */}
-        <div className="mb-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6 shadow-lg">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6 shadow-lg">
           <div className="text-sm font-semibold text-slate-300 mb-3">Filters</div>
           <FilterPanel
             data={data}
             onFilter={applyFilters}
-            onReset={() => { setFilteredData([]); setIsFiltered(false); setNoResults(false); }}
+            onReset={() => {
+              setFilteredData([]);
+              setIsFiltered(false);
+              setNoResults(false);
+            }}
             onSort={applySort}
           />
         </div>
-        
 
         {/* Toolbar */}
         <div className="flex flex-wrap items-end gap-4 md:gap-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6 shadow-lg">
-        <div className="flex flex-col gap-2 min-w-[220px]">
-  <label className="text-slate-400 font-semibold">Select Image View</label>
-  <select
-  className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/50"
-  value={selectedView}
-  onChange={(e) => setSelectedView(e.target.value)}
->
-  {uploadedData.length === 0 ? (
-    <>
-      <option value="front">Front View</option>
-      <option value="top">Top View</option>
-      <option value="iso">Isometric View</option>
-      <option value="deformation">Truss Deformation</option>
-    </>
-  ) : (
-    Object.keys(data[0]?.images || {}).map((key, i) => (
-      <option key={key} value={key}>
-        {folderLabels?.[i] || `Folder ${i + 1}`}   
-      </option>
-    ))
-  )}
-</select>
-</div>
+          <div className="flex flex-col gap-2 min-w-[220px]">
+            <label className="text-slate-400 font-semibold">Select Image View</label>
+            <select
+              className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100"
+              value={selectedView || ""}
+              onChange={(e) => setSelectedView(e.target.value)}
+              disabled={uploadedData.length === 0}
+            >
+              <option value="">Select Image View</option>
+              {uploadedData.length > 0 &&
+                Object.keys(data[0]?.images || {}).map((key, i) => (
+                  <option key={key} value={key}>
+                    {folderLabels?.[i] || `Folder ${i + 1}`}
+                  </option>
+                ))}
+            </select>
+          </div>
 
           <div className="flex flex-col gap-2 w-full sm:w-36">
             <label className="text-slate-400 font-semibold">Images per row</label>
@@ -264,7 +242,7 @@ function App() {
               type="number"
               min={1}
               max={10}
-              className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/50"
+              className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100"
               value={columnsPerRow}
               onChange={(e) => {
                 const val = parseInt(e.target.value);
@@ -274,9 +252,7 @@ function App() {
           </div>
 
           <div className="flex flex-col gap-2 w-full sm:min-w-[260px] sm:w-[320px]">
-            <label className="text-slate-400 font-semibold">
-              Caption parameters
-            </label>
+            <label className="text-slate-400 font-semibold">Caption parameters</label>
             <CaptionParamPicker
               options={numericParameters}
               value={captionParams}
@@ -296,76 +272,79 @@ function App() {
           </div>
         </div>
 
+        {/* Empty message / Gallery */}
+        {uploadedData.length === 0 ? (
+          <div className="flex-grow flex items-center justify-center text-slate-500 italic">
+            Upload a dataset to begin exploring designs.
+          </div>
+        ) : (
+          <div
+            className="grid w-full gap-4"
+            style={{
+              gridTemplateColumns: `repeat(${Math.max(1, columnsPerRow)}, minmax(0, 1fr))`,
+            }}
+          >
+            {displayed.map((item) => (
+              <ImageCard
+                key={item._key || item.id}
+                item={item}
+                view={selectedView}
+                onClick={() => setSelectedItem(item)}
+                captionParams={captionParams}
+              />
+            ))}
+          </div>
+        )}
 
-        {/* Gallery */}
-        <div
-  className="mt-6 grid w-full gap-4"
-  style={{ gridTemplateColumns: `repeat(${Math.max(1, columnsPerRow)}, minmax(0, 1fr))` }}
->
-{displayed.map((item) => (
-  <ImageCard
-    key={item._key || item.id}         // <-- use unique key
-    item={item}
-    view={selectedView}
-    onClick={() => setSelectedItem(item)}
-    captionParams={captionParams}
-  />
-))}
-</div>
-
-        {/* Visualizations */}
+        {/* Side Panels */}
         <SidePanel open={showVisuals} onClose={() => setShowVisuals(false)} title="Visualizations">
-  <VisualizationPanel
-    filteredData={filteredData.length > 0 ? filteredData : data}
-    onSelectItem={(item) => setSelectedItem(item)}
-    selectedItem={selectedItem}
-  />
-</SidePanel>
+          <VisualizationPanel
+            filteredData={filteredData.length > 0 ? filteredData : data}
+            onSelectItem={(item) => setSelectedItem(item)}
+            selectedItem={selectedItem}
+          />
+        </SidePanel>
 
-{/* Uploader panel*/}
-<SidePanel open={openUploader} onClose={() => setOpenUploader(false)} title="Upload Dataset">
- <div className="space-y-4">
-    <p className="text-slate-300 text-sm">
-      Pick one CSV and the four image folders (Ex: Front, Top, Isometric, Truss deformation).
-    </p>
-    <DatasetUploader
-     showIdField={false}              // hide the ID column input
-      onReady={(items, { folderLabels }) => {
-        const withIds = items.map((d, i) => ({
-          ...d,
-          id: i + 1,  
-        }));
-       setUploadedData(items); 
-       setFolderLabels(folderLabels);       // switch app to the uploaded dataset
-       setFilteredData([]);           // clear filters/sort
-       setIsFiltered(false);
-       setNoResults(false);
-        setSelectedItem(null);
-        setSelectedView("front");
-        setOpenUploader(false); 
-        setShowDatasetToast(true);       // close the panel
-      }}
-    />
-    {uploadedData.length > 0 && (
-     <div className="pt-2 text-xs text-slate-400">
-        Currently using uploaded dataset ({uploadedData.length} items).
-      </div>
-   )}
-  </div>
-+</SidePanel>
+        <SidePanel open={openUploader} onClose={() => setOpenUploader(false)} title="Upload Dataset">
+          <div className="space-y-4">
+            <p className="text-slate-300 text-sm">
+              Pick one CSV and the four image folders (Ex: Front, Top, Isometric, Truss deformation).
+            </p>
+            <DatasetUploader
+              showIdField={false}
+              onReady={(items, { folderLabels }) => {
+                const withIds = items.map((d, i) => ({ ...d, id: i + 1 }));
+                setUploadedData(items);
+                setFolderLabels(folderLabels);
+                setFilteredData([]);
+                setIsFiltered(false);
+                setNoResults(false);
+                setSelectedItem(null);
+                setSelectedView("front");
+                setOpenUploader(false);
+                setShowDatasetToast(true);
+              }}
+            />
+            {uploadedData.length > 0 && (
+              <div className="pt-2 text-xs text-slate-400">
+                Currently using uploaded dataset ({uploadedData.length} items).
+              </div>
+            )}
+          </div>
+        </SidePanel>
 
-        {/* Modal */}
         {selectedItem && (
           <DetailsModal
-          item={selectedItem}
-          view={selectedView}        // <— tell the modal which view is active
-          onClose={() => setSelectedItem(null)}
-          folderLabels={folderLabels}
-        />
+            item={selectedItem}
+            view={selectedView}
+            onClose={() => setSelectedItem(null)}
+            folderLabels={folderLabels}
+          />
         )}
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 export default App;

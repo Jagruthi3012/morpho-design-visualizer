@@ -8,9 +8,14 @@ export default function FilterPanel({ data, onFilter, onReset, onSort }) {
   const [sortParam, setSortParam] = useState('');
 
   useEffect(() => {
-    if (data && data.length > 0 && data[0].params) {
+    if (!data || data.length === 0) {
+      setParameters([]);   
+      return;
+    }
+  
+    if (data[0].params) {
       const keys = Object.keys(data[0].params).filter(
-        (key) => typeof data[0].params[key] === 'number'
+        (key) => typeof data[0].params[key] === "number"
       );
       setParameters(keys);
     }
@@ -47,78 +52,75 @@ export default function FilterPanel({ data, onFilter, onReset, onSort }) {
     onSort(sortParam);
   };
 
-  return (
-    <div className="bg-gray p-4 rounded shadow">
-      <h2 className="text-lg font-semibold mb-2">Filter by Parameters</h2>
-      {conditions.map((cond, i) => (
-        <div key={i} className="flex items-center space-x-2 mb-2">
-          <select
-  className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/50"
-  value={cond.parameter}
-  onChange={(e) => handleChange(i, 'parameter', e.target.value)}
->
-  <option className="bg-slate-900 text-slate-100" value="">parameter name...</option>
-  {parameters.map((p) => (
-    <option className="bg-slate-900 text-slate-100" key={p} value={p}>{p}</option>
-  ))}
-</select>
-<select
-  className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/50"
-  value={cond.operator}
-  onChange={(e) => handleChange(i, 'operator', e.target.value)}
->
-  {operators.map((op) => (
-    <option key={op} value={op}>{op}</option>
-  ))}
-</select>
-<input
-  type="number"
-  placeholder="parameter value..."
-  className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/50"
-  value={cond.value}
-  onChange={(e) => handleChange(i, 'value', e.target.value)}
-/>
+return (
+  <div className="bg-gray p-4 rounded shadow">
+    <h2 className="text-lg font-semibold mb-2">Filter by Parameters</h2>
+
+    {(!data || data.length === 0) ? (
+      <p className="text-slate-400 text-sm italic">
+        Upload a dataset to enable filters.
+      </p>
+    ) : (
+      <>
+        {conditions.map((cond, i) => (
+          <div key={i} className="flex items-center space-x-2 mb-2">
+            <select
+              disabled={parameters.length === 0}
+              className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100"
+              value={cond.parameter}
+              onChange={(e) => handleChange(i, 'parameter', e.target.value)}
+            >
+              <option value="">Select parameter</option>
+              {parameters.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+
+            <select
+              disabled={parameters.length === 0}
+              className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100"
+              value={cond.operator}
+              onChange={(e) => handleChange(i, 'operator', e.target.value)}
+            >
+              {operators.map((op) => (
+                <option key={op} value={op}>{op}</option>
+              ))}
+            </select>
+
+            <input
+              type="number"
+              placeholder="value"
+              disabled={parameters.length === 0}
+              className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100"
+              value={cond.value}
+              onChange={(e) => handleChange(i, 'value', e.target.value)}
+            />
+          </div>
+        ))}
+
+        <div className="space-x-2 mb-4">
+          <button onClick={handleAddCondition} disabled={parameters.length === 0} className="bg-blue-600 text-white text-sm px-3 py-1 rounded disabled:opacity-40">+ Add Condition</button>
+          <button onClick={handleApply} disabled={parameters.length === 0} className="bg-blue-600 text-white text-sm px-3 py-1 rounded disabled:opacity-40">Apply Filters</button>
+          <button onClick={handleReset} disabled={parameters.length === 0} className="bg-blue-600 text-white text-sm px-3 py-1 rounded disabled:opacity-40">Reset Filters</button>
         </div>
-      ))}
-      <div className="space-x-2 mb-4">
-        <button
-          onClick={handleAddCondition}
-          className="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700"
-        >
-          + Add Condition
-        </button>
-        <button
-          onClick={handleApply}
-          className="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700"
-        >
-          Apply Filters
-        </button>
-        <button
-          onClick={handleReset}
-          className="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700"
-        >
-          Reset Filters
-        </button>
-      </div>
-      <div className="mb-4">
-        <label className="mr-2 font-medium">Sort by:</label>
-        <select
-          className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/50"
-          value={sortParam}
-          onChange={(e) => setSortParam(e.target.value)}
-        >
-          <option value="">Select parameter</option>
-          {parameters.map(p => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
-        <button
-          onClick={handleSort}
-          className="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700"
-        >
-          Sort
-        </button>
-      </div>
-    </div>
-  );
+
+        <div className="mb-4">
+          <label className="mr-2 font-medium">Sort by:</label>
+          <select
+            disabled={parameters.length === 0}
+            className="h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-slate-100"
+            value={sortParam}
+            onChange={(e) => setSortParam(e.target.value)}
+          >
+            <option value="">Select parameter</option>
+            {parameters.map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+          <button onClick={handleSort} disabled={parameters.length === 0} className="bg-blue-600 text-white text-sm px-3 py-1 rounded disabled:opacity-40">Sort</button>
+        </div>
+      </>
+    )}
+  </div>
+);
 }

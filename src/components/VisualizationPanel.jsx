@@ -146,8 +146,16 @@ const axis3D = {
     if (idx < 0 && typeof p.pointNumber === "number") idx = p.pointNumber;
     if (idx >= 0) onSelectItem?.(filteredData[idx]);
   };
-
+  
+  if (!filteredData || filteredData.length === 0) {
+    return (
+      <div className="text-slate-400 italic text-sm">
+        Upload a dataset to enable visualizations.
+      </div>
+    );
+  }
   return (
+    
     <div>
       <h2 className="text-xl font-semibold mb-4">Visualizations</h2>
 

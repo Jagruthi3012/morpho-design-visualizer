@@ -194,7 +194,9 @@ export default function DatasetUploader({ onReady, showIdField = false }) {
               accept="image/*"
             />
             <div className="text-xs text-slate-500 mt-1">
-              Pick the folder containing images
+              {f.label
+              ? <>📁 <span className="text-slate-300 font-medium">{f.label}</span></>
+              : "Pick the folder containing images"}
             </div>
           </label>
         ))}
